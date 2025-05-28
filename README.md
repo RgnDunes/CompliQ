@@ -35,7 +35,7 @@ For complete documentation, visit [CompliQ Documentation](https://deepwiki.com/R
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/compliq.git
+git clone https://github.com/RgnDunes/compliq.git
 cd compliq
 
 # Install dependencies
