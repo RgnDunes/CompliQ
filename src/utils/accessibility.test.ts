@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { generateScreenReaderText } from "./accessibility";
 
 // We're mocking DOM elements since we can't test with actual DOM in the unit tests

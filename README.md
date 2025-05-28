@@ -16,6 +16,10 @@ CompliQ is an open-source accessibility simulator designed for frontend develope
 - Accessibility scorecard
 - Fix suggestions for color, ARIA, and semantic issues
 
+## Documentation
+
+For complete documentation, visit [CompliQ Documentation](https://deepwiki.com/RgnDunes/CompliQ).
+
 ---
 
 ## Getting Started
@@ -105,6 +109,23 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Live Demo
 
-Coming soon!
+Visit the live demo at [https://rgndunes.github.io/CompliQ](https://rgndunes.github.io/CompliQ)
+
+---
+
+## Deployment
+
+### GitHub Pages
+
+CompliQ is configured for easy deployment to GitHub Pages:
+
+```bash
+# Deploy to GitHub Pages
+npm run deploy
+```
+
+This will build the project and publish it to the `gh-pages` branch, which will automatically deploy to GitHub Pages.
+
+For automated deployments, a GitHub Actions workflow is included in `.github/workflows/deploy.yml` that will deploy to GitHub Pages whenever changes are pushed to the main branch.
 
 ---

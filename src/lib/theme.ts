@@ -1,6 +1,4 @@
 import { extendTheme } from "@chakra-ui/react";
-import { mode } from "@chakra-ui/theme-tools";
-import type { StyleFunctionProps } from "@chakra-ui/theme-tools";
 
 // Define the color mode config
 const config = {

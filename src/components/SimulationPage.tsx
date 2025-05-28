@@ -4,7 +4,6 @@ import {
   Container,
   Heading,
   Text,
-  Stack,
   Button,
   Tabs,
   TabList,
@@ -18,11 +17,8 @@ import {
   Switch,
   HStack,
   VStack,
-  Alert,
-  AlertIcon,
   Card,
   CardBody,
-  Divider,
 } from "@chakra-ui/react";
 import { useAppStore } from "../store/useAppStore";
 import type { ColorBlindnessType } from "../types";
@@ -310,34 +306,6 @@ const SimulationPage = () => {
       default:
         return null;
     }
-  };
-
-  // Get CSS filter based on current simulation type
-  const getSimulationFilter = () => {
-    if (currentSimulation === "lowVision" && lowVisionActive) {
-      return "blur(2px) brightness(0.9)";
-    }
-
-    if (currentSimulation === "colorBlindness") {
-      switch (colorBlindnessType) {
-        case "protanopia":
-          // Red-blind simulation
-          return "url(#protanopia)";
-        case "deuteranopia":
-          // Green-blind simulation
-          return "url(#deuteranopia)";
-        case "tritanopia":
-          // Blue-blind simulation
-          return "url(#tritanopia)";
-        case "achromatopsia":
-          // Complete color blindness simulation
-          return "grayscale(100%)";
-        default:
-          return "none";
-      }
-    }
-
-    return "none";
   };
 
   // Get colorblindness style based on selected type

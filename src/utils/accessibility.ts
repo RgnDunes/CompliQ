@@ -28,11 +28,13 @@ export const runAccessibilityAudit = async (): Promise<AccessibilityReport> => {
         // For each node that has this violation, create an issue
         return violation.nodes.map((node) => ({
           id: `${violation.id}-${Math.random().toString(36).substring(2, 9)}`,
-          element: document.querySelector(node.target.join(" ")),
+          element: document.querySelector(
+            node.target.join(" ")
+          ) as HTMLElement | null,
           selector: node.target.join(" "),
           message: violation.help,
-          severity: severityMap[violation.impact] || "moderate",
-          impact: violation.impact,
+          severity: severityMap[violation.impact || ""] || "moderate",
+          impact: violation.impact || "",
           help: violation.help,
           helpUrl: violation.helpUrl,
           tags: violation.tags,
