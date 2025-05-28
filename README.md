@@ -4,6 +4,8 @@
 
 CompliQ is an open-source accessibility simulator designed for frontend developers to **visualize and debug accessibility issues in real-time**. From color-blindness simulations to keyboard-only navigation overlays, CompliQ helps you build inclusive web apps with confidence.
 
+https://github.com/user-attachments/assets/daa9dec0-d9ee-414e-ac86-7b0b4a842b82
+
 ---
 
 ## Features
