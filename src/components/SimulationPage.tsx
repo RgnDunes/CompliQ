@@ -52,6 +52,59 @@ const SimulationPage = () => {
     setLocalUrl(e.target.value);
   };
 
+  // Add new state for proxy usage
+  const [useProxy, setUseProxy] = useState(false);
+
+  // Update the function to get the proxied URL
+  const getProxiedUrl = (url: string) => {
+    if (!url || url === "demo") return url;
+
+    // Try multiple proxy services in order of reliability
+    // Using corsanywhere.herokuapp.com which is more permissive
+    return `https://corsproxy.io/?${encodeURIComponent(url)}`;
+  };
+
+  // Add a function to test if a URL is accessible through iframe
+  const testIframeAccess = async (url: string): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const testFrame = document.createElement("iframe");
+      testFrame.style.display = "none";
+      testFrame.src = url;
+
+      const timeoutId = setTimeout(() => {
+        document.body.removeChild(testFrame);
+        resolve(false);
+      }, 5000); // 5 second timeout
+
+      testFrame.onload = () => {
+        try {
+          // Try to access the iframe content
+          const frameWindow = testFrame.contentWindow;
+          // Check if we can access the frame's document
+          if (!frameWindow || frameWindow.document === undefined) {
+            throw new Error("Cannot access frame content");
+          }
+          clearTimeout(timeoutId);
+          document.body.removeChild(testFrame);
+          resolve(true);
+        } catch (e) {
+          clearTimeout(timeoutId);
+          document.body.removeChild(testFrame);
+          resolve(false);
+        }
+      };
+
+      testFrame.onerror = () => {
+        clearTimeout(timeoutId);
+        document.body.removeChild(testFrame);
+        resolve(false);
+      };
+
+      document.body.appendChild(testFrame);
+    });
+  };
+
+  // Update handleUrlSubmit to activate proxy by default when loading a new URL
   const handleUrlSubmit = () => {
     // Check for special "demo" URL
     if (localUrl.toLowerCase() === "demo") {
@@ -64,6 +117,10 @@ const SimulationPage = () => {
     try {
       const url = new URL(localUrl);
       setUrl(url.toString());
+      // Reset error state to give the iframe a chance to load with proxy
+      setIframeError(false);
+      // Enable proxy by default for all external URLs
+      setUseProxy(true);
     } catch (e) {
       // Invalid URL
       console.error("Invalid URL:", e);
@@ -101,9 +158,33 @@ const SimulationPage = () => {
 
   // Reset iframe error when URL changes but keep it true initially
   useEffect(() => {
-    // Only set to false if there's actually a URL
+    // Skip for demo content
+    if (urlInput.url === "demo") {
+      return;
+    }
+
+    // Try to load the URL when it changes
     if (urlInput.url) {
-      setIframeError(true); // Start with true and let the iframe onLoad event set it to false if successful
+      const loadUrl = async () => {
+        // First try direct access
+        setUseProxy(false);
+        setIframeError(false);
+
+        const directAccess = await testIframeAccess(urlInput.url);
+        if (!directAccess) {
+          // If direct access fails, try with proxy
+          setUseProxy(true);
+          const proxiedUrl = getProxiedUrl(urlInput.url);
+          const proxyAccess = await testIframeAccess(proxiedUrl);
+
+          if (!proxyAccess) {
+            // If proxy also fails, show error
+            setIframeError(true);
+          }
+        }
+      };
+
+      loadUrl();
     }
   }, [urlInput.url]);
 
@@ -609,6 +690,43 @@ const SimulationPage = () => {
     </Box>
   );
 
+  // Add this effect to dynamically create CSS for simulation classes
+  useEffect(() => {
+    // Create style element for our simulation classes
+    const style = document.createElement("style");
+    style.id = "simulation-styles";
+    style.innerHTML = `
+      .low-vision-simulation {
+        filter: blur(2px) brightness(0.9) !important;
+      }
+      
+      .color-blindness-protanopia {
+        filter: sepia(0.5) hue-rotate(320deg) !important;
+      }
+      
+      .color-blindness-deuteranopia {
+        filter: sepia(0.3) hue-rotate(280deg) !important;
+      }
+      
+      .color-blindness-tritanopia {
+        filter: sepia(0.2) hue-rotate(180deg) !important;
+      }
+      
+      .color-blindness-achromatopsia {
+        filter: grayscale(100%) !important;
+      }
+    `;
+
+    document.head.appendChild(style);
+
+    return () => {
+      const existingStyle = document.getElementById("simulation-styles");
+      if (existingStyle) {
+        existingStyle.remove();
+      }
+    };
+  }, []);
+
   return (
     <Container maxW="container.xl" py={10}>
       <VStack spacing={8} align="stretch">
@@ -773,14 +891,38 @@ const SimulationPage = () => {
                           Many websites prevent embedding in iframes for
                           security reasons.
                         </Text>
-                        <Button
-                          colorScheme="blue"
-                          onClick={() => setUseDemoContent(true)}
-                          mb={5}
-                          size="lg"
-                        >
-                          Use Demo Content Instead
-                        </Button>
+                        <HStack spacing={4} mb={5}>
+                          <Button
+                            colorScheme="blue"
+                            onClick={() => setUseDemoContent(true)}
+                            size="md"
+                          >
+                            Use Demo Content
+                          </Button>
+                          <Button
+                            colorScheme="green"
+                            onClick={() => {
+                              setUseProxy(!useProxy);
+                              setIframeError(false);
+
+                              // Force reload with the new proxy setting
+                              const currentUrl = urlInput.url;
+                              if (currentUrl) {
+                                // Brief timeout to allow state update
+                                setTimeout(() => {
+                                  if (useProxy) {
+                                    console.log("Trying direct loading...");
+                                  } else {
+                                    console.log("Trying proxy loading...");
+                                  }
+                                }, 100);
+                              }
+                            }}
+                            size="md"
+                          >
+                            {useProxy ? "Try Without Proxy" : "Try Using Proxy"}
+                          </Button>
+                        </HStack>
                         <Text fontSize="sm" color="gray.600">
                           For a full-featured experience, a browser extension
                           would be required to bypass these limitations.
@@ -788,7 +930,9 @@ const SimulationPage = () => {
                       </Box>
                     ) : (
                       <iframe
-                        src={urlInput.url}
+                        src={
+                          useProxy ? getProxiedUrl(urlInput.url) : urlInput.url
+                        }
                         title="Website Preview"
                         width="100%"
                         height="500px"
@@ -797,10 +941,21 @@ const SimulationPage = () => {
                           borderRadius: "4px",
                           backgroundColor: "#fff",
                         }}
-                        sandbox="allow-same-origin allow-scripts"
+                        className={`
+                          ${
+                            currentSimulation === "lowVision" && lowVisionActive
+                              ? "low-vision-simulation"
+                              : ""
+                          }
+                          ${
+                            currentSimulation === "colorBlindness"
+                              ? `color-blindness-${colorBlindnessType}`
+                              : ""
+                          }
+                        `}
+                        sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
                         onError={handleIframeError}
                         onLoad={(e) => {
-                          // Always attempt to access contentDocument to detect if cross-origin blocked
                           try {
                             const iframe = e.target as HTMLIFrameElement;
                             // Try to access the content document - will throw if blocked
@@ -811,16 +966,44 @@ const SimulationPage = () => {
                             // If we can access the document, we're good
                             if (doc) {
                               setIframeError(false);
+
+                              // Apply simulation styles directly to the iframe document body
+                              if (currentSimulation === "colorBlindness") {
+                                const style = getColorBlindnessStyle();
+                                if (
+                                  doc.body &&
+                                  Object.keys(style).length > 0 &&
+                                  style.filter
+                                ) {
+                                  doc.body.style.filter =
+                                    style.filter as string;
+                                }
+                              }
+
+                              if (
+                                currentSimulation === "lowVision" &&
+                                lowVisionActive
+                              ) {
+                                if (doc.body) {
+                                  doc.body.style.filter =
+                                    "blur(2px) brightness(0.9)";
+                                }
+                              }
                             } else {
-                              setIframeError(true);
+                              throw new Error("Cannot access iframe content");
                             }
                           } catch (err) {
-                            // Cross-origin error occurred
                             console.error(
                               "Cross-origin frame access denied:",
                               err
                             );
-                            setIframeError(true);
+                            // If we're not already using proxy, try with proxy
+                            if (!useProxy) {
+                              setUseProxy(true);
+                              setIframeError(false); // Reset to give proxy a chance
+                            } else {
+                              setIframeError(true);
+                            }
                           }
                         }}
                       />

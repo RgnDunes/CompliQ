@@ -60,6 +60,21 @@ npm test
 4. View the simulation and accessibility suggestions
 5. Make improvements based on the findings
 
+### Website Embedding
+
+When attempting to analyze external websites, you might encounter cross-origin restrictions that prevent the website from being embedded. CompliQ provides two solutions:
+
+1. **Demo Content**: Use the built-in demo content that demonstrates various accessibility features
+2. **Proxy Mode**: CompliQ automatically attempts to load websites through a public proxy service to bypass cross-origin restrictions
+
+The application uses the CORSProxy.io service to proxy website content, which helps bypass most cross-origin restrictions. For local development, a backup proxy server is also included:
+
+```bash
+npm run proxy
+```
+
+Note that not all websites can be proxied successfully due to various security measures. The demo content provides the most reliable experience for testing accessibility features.
+
 ---
 
 ## Simulations
